@@ -10,9 +10,9 @@ phases:
 
   build:
     commands:
-      - echo Triggering deployment on EC2 via SSM...
-      - aws ssm send-command \
-        --document-name "AWS-RunShellScript" \
-        --targets "Key=instanceids,Values=i-0a7ad0f1d0cdee1bc" \
-        --parameters commands="cd /home/ec2-user/app || mkdir -p /home/ec2-user/app,cd /home/ec2-user/app,git clone https://github.com/Namit2924/nodejs-cicd-app.git . || git pull,npm install,pkill node || true,nohup node app.js > output.log 2>&1 &" \
-        --region ap-south-1
+      - echo Build phase...
+      - echo Nothing to build for simple Node app
+
+artifacts:
+  files:
+    - '**/*'
