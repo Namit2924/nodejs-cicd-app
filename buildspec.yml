@@ -8,21 +8,11 @@ phases:
       - echo Installing dependencies...
       - npm install
 
-      - echo Setting up SSH...
-      - mkdir -p ~/.ssh
-      - echo "$EC2_KEY_B64" | base64 -d > ~/.ssh/key.pem
-      - chmod 400 ~/.ssh/key.pem
-
   build:
     commands:
-      - echo Deploying to EC2...
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "mkdir -p /home/ec2-user/app"
-      - scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem -r . ec2-user@13.206.120.85:/home/ec2-user/app
-
-  post_build:
-    commands:
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "cd /home/ec2-user/app && npm install && pkill node || true && nohup node app.js > output.log 2>&1 &"
-
-artifacts:
-  files:
-    - '**/*'
+      - echo Triggering deployment on EC2 via SSM...
+      - aws ssm send-command \
+        --document-name "AWS-RunShellScript" \
+        --targets "Key=instanceids,Values=<YOUR-EC2-ID>" \
+        --parameters commands="cd /home/ec2-user/app || mkdir -p /home/ec2-user/app,cd /home/ec2-user/app,git clone <YOUR-GITHUB-REPO> . || git pull,npm install,pkill node || true,nohup node app.js > output.log 2>&1 &" \
+        --region ap-south-1
