@@ -2,32 +2,26 @@ version: 0.2
 
 phases:
   install:
-  runtime-versions:
-    nodejs: 18
-  commands:
-    - npm install
-    - mkdir -p ~/.ssh
-    - printf "%s" "$EC2_KEY" > ~/.ssh/key.pem
-    - chmod 400 ~/.ssh/key.pem
-    - sed -i 's/\r$//' ~/.ssh/key.pem
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing dependencies...
+      - npm install
+      - echo Setting up SSH...
+      - mkdir -p ~/.ssh
+      - printf "%s" "$EC2_KEY" > ~/.ssh/key.pem
+      - chmod 400 ~/.ssh/key.pem
+      - sed -i 's/\r$//' ~/.ssh/key.pem
 
   build:
     commands:
       - echo Deploying to EC2...
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "
-          cd /home/ec2-user/app || mkdir app && cd app;
-          rm -rf *;
-        "
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "cd /home/ec2-user/app || mkdir -p /home/ec2-user/app"
       - scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem -r . ec2-user@13.206.120.85:/home/ec2-user/app
 
   post_build:
     commands:
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "
-          cd /home/ec2-user/app;
-          npm install;
-          pkill node || true;
-          nohup node app.js > output.log 2>&1 &
-        "
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "cd /home/ec2-user/app && npm install && pkill node || true && nohup node app.js > output.log 2>&1 &"
 
 artifacts:
   files:
