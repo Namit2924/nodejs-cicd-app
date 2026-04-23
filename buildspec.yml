@@ -7,16 +7,16 @@ phases:
     commands:
       - echo Installing dependencies...
       - npm install
+
       - echo Setting up SSH...
       - mkdir -p ~/.ssh
-      - printf "%s" "$EC2_KEY" > ~/.ssh/key.pem
+      - echo "$EC2_KEY_B64" | base64 -d > ~/.ssh/key.pem
       - chmod 400 ~/.ssh/key.pem
-      - sed -i 's/\r$//' ~/.ssh/key.pem
 
   build:
     commands:
       - echo Deploying to EC2...
-      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "cd /home/ec2-user/app || mkdir -p /home/ec2-user/app"
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "mkdir -p /home/ec2-user/app"
       - scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem -r . ec2-user@13.206.120.85:/home/ec2-user/app
 
   post_build:
