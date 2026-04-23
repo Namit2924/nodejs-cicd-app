@@ -7,14 +7,28 @@ phases:
     commands:
       - echo Installing dependencies...
       - npm install
+      - echo Setting up SSH...
+      - mkdir -p ~/.ssh
+      - echo "$EC2_KEY" > ~/.ssh/key.pem
+      - chmod 400 ~/.ssh/key.pem
 
   build:
     commands:
-      - echo Build phase...
+      - echo Deploying to EC2...
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "
+          cd /home/ec2-user/app || mkdir app && cd app;
+          rm -rf *;
+        "
+      - scp -o StrictHostKeyChecking=no -i ~/.ssh/key.pem -r . ec2-user@13.206.120.85:/home/ec2-user/app
 
   post_build:
     commands:
-      - echo Build completed successfully
+      - ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ec2-user@13.206.120.85 "
+          cd /home/ec2-user/app;
+          npm install;
+          pkill node || true;
+          nohup node app.js > output.log 2>&1 &
+        "
 
 artifacts:
   files:
